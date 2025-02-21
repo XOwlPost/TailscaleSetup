@@ -24,6 +24,13 @@ const THEME_OPTIONS = {
 export function ThemePicker({ widgetId, currentTheme }: ThemePickerProps) {
   const { updateWidgetTheme } = useWidgetStore();
 
+  const getCurrentThemeName = () => {
+    if (!currentTheme?.primary) return 'blue';
+    return Object.entries(THEME_OPTIONS).find(
+      ([_, theme]) => theme.primary === currentTheme.primary
+    )?.[0] || 'blue';
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

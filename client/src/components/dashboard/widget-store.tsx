@@ -89,7 +89,11 @@ export const useWidgetStore = create<WidgetStore>()(
       })),
       updateWidgetTheme: (id, theme) => set((state) => ({
         widgets: state.widgets.map((w) =>
-          w.id === id ? { ...w, theme } : w
+          w.id === id ? { 
+            ...w, 
+            theme: { ...theme },
+            lastInteraction: new Date().toISOString()
+          } : w
         )
       })),
       recordInteraction: (id) => set((state) => ({
@@ -122,7 +126,6 @@ export const useWidgetStore = create<WidgetStore>()(
           }
         }
 
-        // Remove duplicates and limit to 3 recommendations
         return Array.from(new Set(recommendations)).slice(0, 3);
       }
     }),
