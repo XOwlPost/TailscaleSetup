@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { apiRequest } from '@/lib/queryClient';
 
 export interface Widget {
   id: string;
@@ -52,59 +53,112 @@ export const useWidgetStore = create<WidgetStore>()(
   persist(
     (set, get) => ({
       widgets: [],
-      addWidget: (widget) => set((state) => ({
-        widgets: [...state.widgets, { 
+      addWidget: async (widget) => {
+        const newWidget = { 
           ...widget, 
           id: Math.random().toString(36).slice(2),
           interactionCount: 0,
           layout: {
             lastUpdated: new Date().toISOString()
           }
-        }]
-      })),
-      removeWidget: (id) => set((state) => ({
-        widgets: state.widgets.filter((w) => w.id !== id)
-      })),
-      updateWidgetPosition: (id, position) => set((state) => ({
-        widgets: state.widgets.map((w) => 
-          w.id === id ? { ...w, position } : w
-        )
-      })),
-      updateWidgetLayout: (id, breakpoint, position) => set((state) => ({
-        widgets: state.widgets.map((w) =>
-          w.id === id ? {
-            ...w,
-            layout: {
-              ...w.layout,
-              [breakpoint]: position,
-              lastUpdated: new Date().toISOString()
-            }
-          } : w
-        )
-      })),
-      updateWidgetConfig: (id, config) => set((state) => ({
-        widgets: state.widgets.map((w) =>
-          w.id === id ? { ...w, config: { ...w.config, ...config } } : w
-        )
-      })),
-      updateWidgetTheme: (id, theme) => set((state) => ({
-        widgets: state.widgets.map((w) =>
-          w.id === id ? { 
-            ...w, 
-            theme: { ...theme },
-            lastInteraction: new Date().toISOString()
-          } : w
-        )
-      })),
-      recordInteraction: (id) => set((state) => ({
-        widgets: state.widgets.map((w) =>
-          w.id === id ? { 
-            ...w, 
-            lastInteraction: new Date().toISOString(),
-            interactionCount: (w.interactionCount || 0) + 1
-          } : w
-        )
-      })),
+        };
+
+        await apiRequest('/api/widgets', {
+          method: 'POST',
+          body: JSON.stringify(newWidget)
+        });
+
+        set((state) => ({
+          widgets: [...state.widgets, newWidget]
+        }));
+      },
+      removeWidget: async (id) => {
+        await apiRequest(`/api/widgets/${id}`, {
+          method: 'DELETE'
+        });
+
+        set((state) => ({
+          widgets: state.widgets.filter((w) => w.id !== id)
+        }));
+      },
+      updateWidgetPosition: async (id, position) => {
+        await apiRequest(`/api/widgets/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ position })
+        });
+
+        set((state) => ({
+          widgets: state.widgets.map((w) => 
+            w.id === id ? { ...w, position } : w
+          )
+        }));
+      },
+      updateWidgetLayout: async (id, breakpoint, position) => {
+        const layout = {
+          [breakpoint]: position,
+          lastUpdated: new Date().toISOString()
+        };
+
+        await apiRequest(`/api/widgets/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ layout })
+        });
+
+        set((state) => ({
+          widgets: state.widgets.map((w) =>
+            w.id === id ? {
+              ...w,
+              layout: {
+                ...w.layout,
+                ...layout
+              }
+            } : w
+          )
+        }));
+      },
+      updateWidgetConfig: async (id, config) => {
+        await apiRequest(`/api/widgets/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ config })
+        });
+
+        set((state) => ({
+          widgets: state.widgets.map((w) =>
+            w.id === id ? { ...w, config: { ...w.config, ...config } } : w
+          )
+        }));
+      },
+      updateWidgetTheme: async (id, theme) => {
+        await apiRequest(`/api/widgets/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ theme })
+        });
+
+        set((state) => ({
+          widgets: state.widgets.map((w) =>
+            w.id === id ? { 
+              ...w, 
+              theme: { ...theme },
+              lastInteraction: new Date().toISOString()
+            } : w
+          )
+        }));
+      },
+      recordInteraction: async (id) => {
+        await apiRequest(`/api/widgets/${id}/interaction`, {
+          method: 'POST'
+        });
+
+        set((state) => ({
+          widgets: state.widgets.map((w) =>
+            w.id === id ? { 
+              ...w, 
+              lastInteraction: new Date().toISOString(),
+              interactionCount: (w.interactionCount || 0) + 1
+            } : w
+          )
+        }));
+      },
       getRecommendedWidgets: () => {
         const state = get();
         const existingTypes = new Set(state.widgets.map(w => w.type));

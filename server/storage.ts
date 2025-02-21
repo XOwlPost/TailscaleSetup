@@ -1,4 +1,6 @@
-import { nodes, acls, roles, type Node, type InsertNode, type Acl, type InsertAcl, type Role, type InsertRole } from "@shared/schema";
+import { nodes, acls, roles, widgets, type Node, type InsertNode, type Acl, type InsertAcl, type Role, type InsertRole, type Widget, type InsertWidget } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Node operations
@@ -20,144 +22,125 @@ export interface IStorage {
   createAcl(acl: InsertAcl): Promise<Acl>;
   updateAcl(id: number, acl: Partial<Acl>): Promise<Acl | undefined>;
   getAclsByRole(roleId: number): Promise<Acl[]>;
+
+  // Widget operations
+  getWidget(widgetId: string): Promise<Widget | undefined>;
+  getWidgets(): Promise<Widget[]>;
+  createWidget(widget: InsertWidget): Promise<Widget>;
+  updateWidget(widgetId: string, widget: Partial<Widget>): Promise<Widget | undefined>;
+  deleteWidget(widgetId: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private nodes: Map<number, Node>;
-  private acls: Map<number, Acl>;
-  private roles: Map<number, Role>;
-  private nodeCurrentId: number;
-  private aclCurrentId: number;
-  private roleCurrentId: number;
-
-  constructor() {
-    this.nodes = new Map();
-    this.acls = new Map();
-    this.roles = new Map();
-    this.nodeCurrentId = 1;
-    this.aclCurrentId = 1;
-    this.roleCurrentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   // Node operations
   async getNode(id: number): Promise<Node | undefined> {
-    return this.nodes.get(id);
+    const [node] = await db.select().from(nodes).where(eq(nodes.id, id));
+    return node;
   }
 
   async getNodes(): Promise<Node[]> {
-    return Array.from(this.nodes.values());
+    return db.select().from(nodes);
   }
 
   async createNode(insertNode: InsertNode): Promise<Node> {
-    const id = this.nodeCurrentId++;
-    const node: Node = {
-      ...insertNode,
-      id,
-      status: "pending",
-      lastSeen: new Date(),
-      tags: insertNode.tags || [],
-      config: insertNode.config || null,
-    };
-    this.nodes.set(id, node);
+    const [node] = await db.insert(nodes).values(insertNode).returning();
     return node;
   }
 
   async updateNodeStatus(id: number, status: string): Promise<Node | undefined> {
-    const node = await this.getNode(id);
-    if (!node) return undefined;
-
-    const updatedNode = {
-      ...node,
-      status,
-      lastSeen: new Date(),
-    };
-    this.nodes.set(id, updatedNode);
-    return updatedNode;
+    const [node] = await db
+      .update(nodes)
+      .set({ status, lastSeen: new Date() })
+      .where(eq(nodes.id, id))
+      .returning();
+    return node;
   }
 
   // Role operations
   async getRole(id: number): Promise<Role | undefined> {
-    return this.roles.get(id);
-  }
-
-  async getRoles(): Promise<Role[]> {
-    return Array.from(this.roles.values());
-  }
-
-  async createRole(insertRole: InsertRole): Promise<Role> {
-    const id = this.roleCurrentId++;
-    const role: Role = {
-      id,
-      name: insertRole.name,
-      description: insertRole.description || "",
-      permissions: {
-        canView: true,
-        canEdit: false,
-        canDelete: false,
-        canManageACLs: false,
-        ...insertRole.permissions,
-      },
-    };
-    this.roles.set(id, role);
+    const [role] = await db.select().from(roles).where(eq(roles.id, id));
     return role;
   }
 
-  async updateRole(id: number, update: Partial<Role>): Promise<Role | undefined> {
-    const role = await this.getRole(id);
-    if (!role) return undefined;
+  async getRoles(): Promise<Role[]> {
+    return db.select().from(roles);
+  }
 
-    const updatedRole = { 
-      ...role,
-      ...update,
-      permissions: {
-        ...role.permissions,
-        ...update.permissions,
-      },
-    };
-    this.roles.set(id, updatedRole);
-    return updatedRole;
+  async createRole(role: InsertRole): Promise<Role> {
+    const [created] = await db.insert(roles).values(role).returning();
+    return created;
+  }
+
+  async updateRole(id: number, update: Partial<Role>): Promise<Role | undefined> {
+    const [updated] = await db
+      .update(roles)
+      .set(update)
+      .where(eq(roles.id, id))
+      .returning();
+    return updated;
   }
 
   async deleteRole(id: number): Promise<boolean> {
-    return this.roles.delete(id);
+    const result = await db.delete(roles).where(eq(roles.id, id));
+    return result.rowCount > 0;
   }
 
   // ACL operations
   async getAcl(id: number): Promise<Acl | undefined> {
-    return this.acls.get(id);
-  }
-
-  async getAcls(): Promise<Acl[]> {
-    return Array.from(this.acls.values());
-  }
-
-  async createAcl(insertAcl: InsertAcl): Promise<Acl> {
-    const id = this.aclCurrentId++;
-    const acl: Acl = {
-      id,
-      name: insertAcl.name,
-      description: insertAcl.description || "",
-      rules: insertAcl.rules,
-      roleId: insertAcl.roleId,
-      enabled: insertAcl.enabled ?? true,
-      priority: this.aclCurrentId,
-    };
-    this.acls.set(id, acl);
+    const [acl] = await db.select().from(acls).where(eq(acls.id, id));
     return acl;
   }
 
-  async updateAcl(id: number, update: Partial<Acl>): Promise<Acl | undefined> {
-    const acl = await this.getAcl(id);
-    if (!acl) return undefined;
+  async getAcls(): Promise<Acl[]> {
+    return db.select().from(acls);
+  }
 
-    const updatedAcl = { ...acl, ...update };
-    this.acls.set(id, updatedAcl);
-    return updatedAcl;
+  async createAcl(acl: InsertAcl): Promise<Acl> {
+    const [created] = await db.insert(acls).values(acl).returning();
+    return created;
+  }
+
+  async updateAcl(id: number, update: Partial<Acl>): Promise<Acl | undefined> {
+    const [updated] = await db
+      .update(acls)
+      .set(update)
+      .where(eq(acls.id, id))
+      .returning();
+    return updated;
   }
 
   async getAclsByRole(roleId: number): Promise<Acl[]> {
-    return Array.from(this.acls.values()).filter(acl => acl.roleId === roleId);
+    return db.select().from(acls).where(eq(acls.roleId, roleId));
+  }
+
+  // Widget operations
+  async getWidget(widgetId: string): Promise<Widget | undefined> {
+    const [widget] = await db.select().from(widgets).where(eq(widgets.widgetId, widgetId));
+    return widget;
+  }
+
+  async getWidgets(): Promise<Widget[]> {
+    return db.select().from(widgets);
+  }
+
+  async createWidget(widget: InsertWidget): Promise<Widget> {
+    const [created] = await db.insert(widgets).values(widget).returning();
+    return created;
+  }
+
+  async updateWidget(widgetId: string, update: Partial<Widget>): Promise<Widget | undefined> {
+    const [updated] = await db
+      .update(widgets)
+      .set({ ...update, lastInteraction: new Date() })
+      .where(eq(widgets.widgetId, widgetId))
+      .returning();
+    return updated;
+  }
+
+  async deleteWidget(widgetId: string): Promise<boolean> {
+    const result = await db.delete(widgets).where(eq(widgets.widgetId, widgetId));
+    return result.rowCount > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

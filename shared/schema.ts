@@ -12,7 +12,6 @@ export const nodes = pgTable("nodes", {
   config: jsonb("config"),
 });
 
-// Define roles table
 export const roles = pgTable("roles", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -20,7 +19,6 @@ export const roles = pgTable("roles", {
   permissions: jsonb("permissions").notNull(),
 });
 
-// Enhanced ACLs table with role-based access
 export const acls = pgTable("acls", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -31,7 +29,19 @@ export const acls = pgTable("acls", {
   priority: serial("priority"),
 });
 
-// Node schemas
+export const widgets = pgTable("widgets", {
+  id: serial("id").primaryKey(),
+  widgetId: text("widget_id").notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  position: serial("position"),
+  config: jsonb("config"),
+  theme: jsonb("theme"),
+  layout: jsonb("layout"),
+  lastInteraction: timestamp("last_interaction"),
+  interactionCount: serial("interaction_count").default(0),
+});
+
 export const insertNodeSchema = createInsertSchema(nodes).pick({
   hostname: true,
   ipAddress: true,
@@ -39,7 +49,6 @@ export const insertNodeSchema = createInsertSchema(nodes).pick({
   config: true,
 });
 
-// Role schemas
 export const insertRoleSchema = createInsertSchema(roles);
 export const roleSchema = z.object({
   id: z.number(),
@@ -53,7 +62,6 @@ export const roleSchema = z.object({
   }),
 });
 
-// ACL schemas
 export const insertAclSchema = createInsertSchema(acls).extend({
   rules: z.object({
     sources: z.array(z.string()),
@@ -63,10 +71,30 @@ export const insertAclSchema = createInsertSchema(acls).extend({
   }),
 });
 
-// Types
+export const widgetThemeSchema = z.object({
+  primary: z.string(),
+  background: z.string().optional(),
+  text: z.string().optional(),
+  border: z.string().optional(),
+});
+
+export const widgetLayoutSchema = z.object({
+  mobile: z.number().optional(),
+  tablet: z.number().optional(),
+  desktop: z.number().optional(),
+  lastUpdated: z.string(),
+});
+
+export const insertWidgetSchema = createInsertSchema(widgets).extend({
+  theme: widgetThemeSchema.optional(),
+  layout: widgetLayoutSchema.optional(),
+});
+
 export type InsertNode = z.infer<typeof insertNodeSchema>;
 export type Node = typeof nodes.$inferSelect;
 export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type Role = z.infer<typeof roleSchema>;
 export type InsertAcl = z.infer<typeof insertAclSchema>;
 export type Acl = typeof acls.$inferSelect;
+export type InsertWidget = z.infer<typeof insertWidgetSchema>;
+export type Widget = typeof widgets.$inferSelect;
