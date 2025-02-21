@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { GripVertical } from "lucide-react";
+import { GripVertical, X } from "lucide-react";
+import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
 export interface WidgetProps {
@@ -30,30 +31,41 @@ export function DashboardWidget({
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
         <div className="flex items-center gap-2">
-          <div className="touch-none">
+          <motion.div 
+            className="touch-none"
+            whileHover={{ scale: 1.2, rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5 }}
+          >
             <GripVertical 
               className="h-4 w-4 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors" 
             />
-          </div>
+          </motion.div>
           <CardTitle className="text-sm font-medium truncate">{title}</CardTitle>
         </div>
         {onRemove && (
-          <button
+          <motion.button
             onClick={onRemove}
             className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            whileHover={{ 
+              scale: 1.2,
+              rotate: 90
+            }}
+            whileTap={{ scale: 0.9 }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
-          </button>
+          </motion.button>
         )}
       </CardHeader>
       <CardContent className="p-4 pt-0 overflow-hidden">
-        <div className="h-full w-full">
+        <motion.div 
+          className="h-full w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           {children}
-        </div>
+        </motion.div>
       </CardContent>
     </Card>
   );

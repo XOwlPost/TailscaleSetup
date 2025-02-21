@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface GridItemProps {
@@ -38,20 +38,34 @@ export function GridItem({ children, className = "" }: GridItemProps) {
         className
       )}
     >
-      <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ 
-          opacity: 1, 
-          scale: isDragging ? 1.02 : 1,
-          boxShadow: isDragging ? "0 8px 24px rgba(0,0,0,0.12)" : "none",
-        }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ duration: 0.2 }}
-        className="h-full w-full"
-      >
-        {children}
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          layout
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ 
+            opacity: 1, 
+            scale: isDragging ? 1.05 : 1,
+            y: 0,
+            boxShadow: isDragging 
+              ? "0 20px 40px rgba(0,0,0,0.12)" 
+              : "0 4px 12px rgba(0,0,0,0.05)",
+            rotate: isDragging ? [-0.5, 0.5] : 0,
+          }}
+          exit={{ opacity: 0, scale: 0.8, y: 20 }}
+          transition={{ 
+            duration: 0.2,
+            rotate: {
+              repeat: isDragging ? Infinity : 0,
+              duration: 0.5,
+            }
+          }}
+          className="h-full w-full"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
