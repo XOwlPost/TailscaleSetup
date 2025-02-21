@@ -11,3 +11,23 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer components {
+  .custom-themed-widget {
+    background-color: var(--widget-bg);
+    color: var(--widget-text);
+    border-color: var(--widget-border);
+  }
+
+  .custom-themed-widget [class*="text-primary"] {
+    color: var(--widget-primary);
+  }
+
+  .custom-themed-widget [class*="bg-primary"] {
+    background-color: var(--widget-primary);
+  }
+
+  .custom-themed-widget [class*="border-primary"] {
+    border-color: var(--widget-primary);
+  }
+}

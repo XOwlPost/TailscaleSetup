@@ -39,9 +39,9 @@ export function DashboardWidget({
     <Card 
       className={cn(
         "relative transition-all duration-200 h-full w-full",
-        "hover:bg-accent/5 focus-within:ring-2",
-        "data-[dragging=true]:opacity-50",
         theme && "custom-themed-widget",
+        "hover:bg-accent/5 focus-within:ring-2 focus-within:ring-[var(--widget-primary)]",
+        "data-[dragging=true]:opacity-50",
         className
       )}
       style={customStyle}
