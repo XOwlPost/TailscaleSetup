@@ -14,11 +14,31 @@ interface ThemePickerProps {
 }
 
 const THEME_OPTIONS = {
-  blue: { primary: '#3b82f6', background: '#f0f9ff', text: '#1e3a8a' },
-  green: { primary: '#22c55e', background: '#f0fdf4', text: '#166534' },
-  purple: { primary: '#a855f7', background: '#faf5ff', text: '#6b21a8' },
-  orange: { primary: '#f97316', background: '#fff7ed', text: '#9a3412' },
-  dark: { primary: '#64748b', background: '#1e293b', text: '#f8fafc' },
+  blue: { 
+    primary: '#2563eb',  // Proper blue
+    background: '#eff6ff', 
+    text: '#1e40af' 
+  },
+  green: { 
+    primary: '#16a34a',  // Proper green
+    background: '#f0fdf4', 
+    text: '#166534' 
+  },
+  purple: { 
+    primary: '#9333ea',  // Proper purple
+    background: '#faf5ff', 
+    text: '#6b21a8' 
+  },
+  orange: { 
+    primary: '#ea580c',  // Proper orange
+    background: '#fff7ed', 
+    text: '#9a3412' 
+  },
+  dark: { 
+    primary: '#334155',  // Proper dark slate
+    background: '#1e293b', 
+    text: '#f8fafc' 
+  },
 };
 
 export function ThemePicker({ widgetId, currentTheme }: ThemePickerProps) {
