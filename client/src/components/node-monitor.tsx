@@ -138,10 +138,10 @@ export function NodeMonitor() {
           }}
         />
       )}
-      <div className="grid gap-4">
+      <div className="space-y-4">
         <Card>
           <CardHeader className="p-4">
-            <CardTitle className="flex items-center gap-2 text-sm">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Check className={cn(
                 "h-4 w-4",
                 getHealthScoreColor(healthScore)
@@ -172,7 +172,7 @@ export function NodeMonitor() {
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="p-4">
-              <CardTitle className="flex items-center gap-2 text-sm">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Cpu className={cn(
                   "h-4 w-4",
                   getStatusColor(cpuUsage, { warning: 70, critical: 90 })
@@ -183,7 +183,7 @@ export function NodeMonitor() {
             <CardContent className="p-4 pt-0 space-y-3">
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-sm">
-                  <span>CPU:</span>
+                  <span>CPU Usage:</span>
                   <span className={getStatusColor(cpuUsage, { warning: 70, critical: 90 })}>
                     {cpuUsage}%
                   </span>
@@ -204,41 +204,43 @@ export function NodeMonitor() {
 
           <Card>
             <CardHeader className="p-4">
-              <CardTitle className="flex items-center gap-2 text-sm">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Network className={cn(
                   "h-4 w-4",
                   getStatusColor(packetLoss, { warning: 5, critical: 10 })
                 )} />
-                Network
+                Network Status
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3">
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center text-sm">
-                  <span>Packet Loss:</span>
-                  <span className={getStatusColor(packetLoss, { warning: 5, critical: 10 })}>
-                    {packetLoss}%
+            <CardContent className="p-4 pt-0">
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Packet Loss:</span>
+                    <span className={getStatusColor(packetLoss, { warning: 5, critical: 10 })}>
+                      {packetLoss}%
+                    </span>
+                  </div>
+                  <Progress value={packetLoss} className={getStatusColor(packetLoss, { warning: 5, critical: 10 })} />
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span>Tailscale:</span>
+                  <div className={cn(
+                    "w-2 h-2 rounded-full",
+                    status?.tailscale.includes("offline") ? "bg-red-500" : "bg-green-500",
+                    "animate-pulse"
+                  )} />
+                  <span className={status?.tailscale.includes("offline") ? "text-red-500" : "text-green-500"}>
+                    {status?.tailscale.includes("offline") ? "Offline" : "Online"}
                   </span>
                 </div>
-                <Progress value={packetLoss} className={getStatusColor(packetLoss, { warning: 5, critical: 10 })} />
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span>Tailscale:</span>
-                <div className={cn(
-                  "w-2 h-2 rounded-full",
-                  status?.tailscale.includes("offline") ? "bg-red-500" : "bg-green-500",
-                  "animate-pulse"
-                )} />
-                <span className={status?.tailscale.includes("offline") ? "text-red-500" : "text-green-500"}>
-                  {status?.tailscale.includes("offline") ? "Offline" : "Online"}
-                </span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="p-4">
-              <CardTitle className="flex items-center gap-2 text-sm">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Terminal className="h-4 w-4" />
                 Services
               </CardTitle>

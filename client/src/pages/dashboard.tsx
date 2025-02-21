@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Server, Network, Shield, Plus } from "lucide-react";
+import { AlertCircle, Plus } from "lucide-react";
 import { NodeMonitor } from "@/components/node-monitor";
 import { LogViewer } from "@/components/log-viewer";
 import { TourGuide } from "@/components/tour-guide";
@@ -74,7 +74,7 @@ export default function Dashboard() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <GridLayout onReorder={handleReorder}>
           {widgetElements.map((widget) => (
             <GridItem key={(widget as React.ReactElement).key}>
