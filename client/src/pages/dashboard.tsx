@@ -1,12 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Server, Network, Shield } from "lucide-react";
+import { AlertCircle, Server, Network, Shield, Plus } from "lucide-react";
 import { NodeMonitor } from "@/components/node-monitor";
 import { TourGuide } from "@/components/tour-guide";
+import { Button } from "@/components/ui/button";
+import { DashboardWidget } from "@/components/dashboard/widget";
+import { GridLayout, GridItem } from "@/components/dashboard/grid-layout";
+import { useWidgetStore, type Widget } from "@/components/dashboard/widget-store";
 import type { Node, Acl } from "@shared/schema";
+import { type ReactNode } from "react";
 
 export default function Dashboard() {
+  const { widgets, addWidget, removeWidget } = useWidgetStore();
   const nodesQuery = useQuery<Node[]>({ 
     queryKey: ["/api/nodes"]
   });
@@ -27,56 +32,56 @@ export default function Dashboard() {
     );
   }
 
-  const nodes = nodesQuery.data || [];
-  const acls = aclsQuery.data || [];
+  const handleAddWidget = () => {
+    addWidget({
+      type: "node-monitor",
+      title: "Node Monitor",
+      position: widgets.length,
+    });
+  };
 
-  const stats = {
-    totalNodes: nodes.length,
-    activeNodes: nodes.filter(n => n.status === "online").length,
-    totalAcls: acls.length
+  const widgetElements = widgets.map((widget) => (
+    <DashboardWidget
+      key={widget.id}
+      id={widget.id}
+      title={widget.title}
+      onRemove={() => removeWidget(widget.id)}
+    >
+      {widget.type === "node-monitor" && <NodeMonitor />}
+    </DashboardWidget>
+  ));
+
+  const handleReorder = (reorderedWidgets: ReactNode[]) => {
+    // Update widget positions based on new order
+    reorderedWidgets.forEach((widget, index) => {
+      const widgetElement = widget as React.ReactElement;
+      const widgetId = widgetElement.props.id;
+      const existingWidget = widgets.find(w => w.id === widgetId);
+      if (existingWidget) {
+        existingWidget.position = index;
+      }
+    });
   };
 
   return (
     <div className="space-y-6">
       <TourGuide />
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Nodes</CardTitle>
-            <Server className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalNodes}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Nodes</CardTitle>
-            <Network className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.activeNodes}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active ACLs</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalAcls}</div>
-          </CardContent>
-        </Card>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <Button onClick={handleAddWidget}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Widget
+        </Button>
       </div>
 
-      <div className="mt-8" data-tour="node-monitor">
-        <h2 className="text-2xl font-semibold mb-4">Real-time Node Monitoring</h2>
-        <NodeMonitor />
-      </div>
+      <GridLayout onReorder={handleReorder}>
+        {widgetElements.map((widget) => (
+          <GridItem key={(widget as React.ReactElement).key}>
+            {widget}
+          </GridItem>
+        ))}
+      </GridLayout>
     </div>
   );
 }
