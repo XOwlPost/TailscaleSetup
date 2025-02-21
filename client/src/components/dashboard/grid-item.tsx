@@ -23,6 +23,7 @@ export function GridItem({ children, className = "" }: GridItemProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    zIndex: isDragging ? 50 : 'auto',
   };
 
   return (
@@ -32,7 +33,7 @@ export function GridItem({ children, className = "" }: GridItemProps) {
       {...attributes}
       {...listeners}
       className={cn(
-        "w-full transition-all",
+        "w-full transition-all touch-none select-none",
         isDragging && "z-50",
         className
       )}
@@ -42,8 +43,8 @@ export function GridItem({ children, className = "" }: GridItemProps) {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ 
           opacity: 1, 
-          scale: 1,
-          boxShadow: isDragging ? "0 8px 20px rgba(0,0,0,0.1)" : "none",
+          scale: isDragging ? 1.02 : 1,
+          boxShadow: isDragging ? "0 8px 24px rgba(0,0,0,0.12)" : "none",
         }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2 }}
