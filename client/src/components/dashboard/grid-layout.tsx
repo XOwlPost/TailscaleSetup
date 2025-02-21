@@ -1,19 +1,32 @@
 import { useEffect, useState } from "react";
 import { motion, Reorder } from "framer-motion";
+import { useWindowSize } from "@/hooks/use-window-size";
 
 interface GridLayoutProps {
   children: React.ReactNode[];
-  columns?: number;
   className?: string;
   onReorder?: (values: React.ReactNode[]) => void;
 }
 
 export function GridLayout({ 
   children,
-  columns = 3,
   className = "",
   onReorder
 }: GridLayoutProps) {
+  const { width } = useWindowSize();
+  const [columns, setColumns] = useState(3);
+
+  // Update columns based on screen size
+  useEffect(() => {
+    if (width < 640) { // Mobile
+      setColumns(1);
+    } else if (width < 1024) { // Tablet
+      setColumns(2);
+    } else { // Desktop
+      setColumns(3);
+    }
+  }, [width]);
+
   return (
     <Reorder.Group 
       axis="y" 
