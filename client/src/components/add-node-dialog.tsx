@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,16 +28,16 @@ export function AddNodeDialog() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const validatedData = insertNodeSchema.parse(formData);
       await apiRequest("POST", "/api/nodes", validatedData);
-      
+
       toast({
         title: "Node added successfully",
         description: "The new node has been added to your network."
       });
-      
+
       queryClient.invalidateQueries({ queryKey: ["/api/nodes"] });
       setOpen(false);
       setFormData({ hostname: "", ipAddress: "", tags: [], config: null });
