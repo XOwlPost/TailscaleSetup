@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Grip, X } from "lucide-react";
-import { useState } from "react";
 import type { ReactNode } from "react";
 
 export interface WidgetProps {
@@ -21,13 +20,10 @@ export function DashboardWidget({
   onRemove,
   isConfigurable = false
 }: WidgetProps) {
-  const [isDragging, setIsDragging] = useState(false);
-
   return (
     <Card 
       className={cn(
         "relative transition-shadow h-full w-full",
-        isDragging && "shadow-lg ring-2 ring-primary/20",
         className
       )}
       data-widget-id={id}
@@ -35,9 +31,7 @@ export function DashboardWidget({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
         <div className="flex items-center gap-2">
           <Grip 
-            className="h-4 w-4 cursor-move text-muted-foreground hidden sm:block" 
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => setIsDragging(false)}
+            className="h-4 w-4 cursor-grab text-muted-foreground hidden sm:block" 
           />
           <CardTitle className="text-sm font-medium truncate">{title}</CardTitle>
         </div>
