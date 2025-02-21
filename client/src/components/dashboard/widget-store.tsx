@@ -9,6 +9,12 @@ export interface Widget {
   position: number;
   lastInteraction?: string;
   interactionCount?: number;
+  layout?: {
+    mobile?: number;
+    tablet?: number;
+    desktop?: number;
+    lastUpdated: string;
+  };
 }
 
 interface WidgetStore {
@@ -16,6 +22,7 @@ interface WidgetStore {
   addWidget: (widget: Omit<Widget, "id">) => void;
   removeWidget: (id: string) => void;
   updateWidgetPosition: (id: string, position: number) => void;
+  updateWidgetLayout: (id: string, breakpoint: 'mobile' | 'tablet' | 'desktop', position: number) => void;
   updateWidgetConfig: (id: string, config: Record<string, any>) => void;
   recordInteraction: (id: string) => void;
   getRecommendedWidgets: () => Widget['type'][];
@@ -25,7 +32,7 @@ const COMMON_COMBINATIONS = [
   ['node-monitor', 'network-status'],
   ['system-resources', 'services'],
   ['node-monitor', 'services', 'network-status'],
-];
+] as const;
 
 export const useWidgetStore = create<WidgetStore>()(
   persist(
@@ -36,6 +43,9 @@ export const useWidgetStore = create<WidgetStore>()(
           ...widget, 
           id: Math.random().toString(36).slice(2),
           interactionCount: 0,
+          layout: {
+            lastUpdated: new Date().toISOString()
+          }
         }]
       })),
       removeWidget: (id) => set((state) => ({
@@ -44,6 +54,18 @@ export const useWidgetStore = create<WidgetStore>()(
       updateWidgetPosition: (id, position) => set((state) => ({
         widgets: state.widgets.map((w) => 
           w.id === id ? { ...w, position } : w
+        )
+      })),
+      updateWidgetLayout: (id, breakpoint, position) => set((state) => ({
+        widgets: state.widgets.map((w) =>
+          w.id === id ? {
+            ...w,
+            layout: {
+              ...w.layout,
+              [breakpoint]: position,
+              lastUpdated: new Date().toISOString()
+            }
+          } : w
         )
       })),
       updateWidgetConfig: (id, config) => set((state) => ({
@@ -86,7 +108,21 @@ export const useWidgetStore = create<WidgetStore>()(
       }
     }),
     {
-      name: 'dashboard-widgets'
+      name: 'dashboard-widgets-v2', // Updated storage key for new schema
+      version: 1, // Add versioning
+      merge: (persistedState: any, currentState) => {
+        // Handle merging old state format with new one
+        return {
+          ...currentState,
+          ...persistedState,
+          widgets: persistedState.widgets.map((widget: Widget) => ({
+            ...widget,
+            layout: widget.layout || {
+              lastUpdated: new Date().toISOString()
+            }
+          }))
+        };
+      }
     }
   )
 );

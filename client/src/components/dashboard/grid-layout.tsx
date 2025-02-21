@@ -14,6 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useWindowSize } from "@/hooks/use-window-size";
+import { useWidgetStore } from "./widget-store";
 import { type ReactNode } from "react";
 
 interface GridLayoutProps {
@@ -21,6 +22,8 @@ interface GridLayoutProps {
   className?: string;
   onReorder?: (values: ReactNode[]) => void;
 }
+
+type Breakpoint = 'mobile' | 'tablet' | 'desktop';
 
 export function GridLayout({ 
   children,
@@ -30,6 +33,8 @@ export function GridLayout({
   const { width } = useWindowSize();
   const [columns, setColumns] = useState(3);
   const [items, setItems] = useState(children);
+  const [currentBreakpoint, setCurrentBreakpoint] = useState<Breakpoint>('desktop');
+  const { updateWidgetLayout } = useWidgetStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -42,14 +47,17 @@ export function GridLayout({
     })
   );
 
-  // Update columns based on screen size
+  // Update columns and breakpoint based on screen size
   useEffect(() => {
     if (width < 640) { // Mobile
       setColumns(1);
+      setCurrentBreakpoint('mobile');
     } else if (width < 1024) { // Tablet
       setColumns(2);
+      setCurrentBreakpoint('tablet');
     } else { // Desktop
       setColumns(3);
+      setCurrentBreakpoint('desktop');
     }
   }, [width]);
 
@@ -64,6 +72,13 @@ export function GridLayout({
       setItems((items) => {
         const oldIndex = items.findIndex((item: any) => item.key === active.id);
         const newIndex = items.findIndex((item: any) => item.key === over.id);
+
+        // Store the new position for the current breakpoint
+        const widgetId = active.id.split('-')[1]; // Assuming format: "widget-{id}"
+        if (widgetId) {
+          updateWidgetLayout(widgetId, currentBreakpoint, newIndex);
+        }
+
         const newItems = arrayMove(items, oldIndex, newIndex);
         onReorder?.(newItems);
         return newItems;
