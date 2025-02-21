@@ -36,13 +36,30 @@ interface AclDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type FormValues = {
+  name: string;
+  description: string;
+  rules: {
+    sources: string[];
+    destinations: string[];
+    ports: number[];
+    action: "allow" | "deny";
+  };
+  roleId: number;
+  enabled: boolean;
+};
+
 export function AclDialog({ acl, roles, open, onOpenChange }: AclDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(insertAclSchema),
-    defaultValues: acl || {
+    defaultValues: acl ? {
+      ...acl,
+      roleId: acl.roleId || 0,
+      description: acl.description || "",
+    } : {
       name: "",
       description: "",
       rules: {
@@ -51,13 +68,12 @@ export function AclDialog({ acl, roles, open, onOpenChange }: AclDialogProps) {
         ports: [],
         action: "allow",
       },
-      roleId: undefined,
+      roleId: 0,
       enabled: true,
-      priority: 1,
     },
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: FormValues) => {
     try {
       if (acl) {
         await apiRequest("PUT", `/api/acls/${acl.id}`, data);
@@ -162,9 +178,10 @@ export function AclDialog({ acl, roles, open, onOpenChange }: AclDialogProps) {
                     <FormLabel>Source IPs</FormLabel>
                     <FormControl>
                       <Input 
-                        {...field} 
-                        value={field.value?.join(",")} 
-                        onChange={e => field.onChange(e.target.value.split(",").map(s => s.trim()))}
+                        value={field.value.join(",")}
+                        onChange={(e) => field.onChange(
+                          e.target.value.split(",").map((s) => s.trim())
+                        )}
                         placeholder="e.g., 100.100.100.100,100.100.100.101"
                       />
                     </FormControl>
@@ -183,9 +200,10 @@ export function AclDialog({ acl, roles, open, onOpenChange }: AclDialogProps) {
                     <FormLabel>Destination IPs</FormLabel>
                     <FormControl>
                       <Input 
-                        {...field} 
-                        value={field.value?.join(",")} 
-                        onChange={e => field.onChange(e.target.value.split(",").map(s => s.trim()))}
+                        value={field.value.join(",")}
+                        onChange={(e) => field.onChange(
+                          e.target.value.split(",").map((s) => s.trim())
+                        )}
                         placeholder="e.g., 100.100.100.102,100.100.100.103"
                       />
                     </FormControl>
@@ -205,9 +223,10 @@ export function AclDialog({ acl, roles, open, onOpenChange }: AclDialogProps) {
                   <FormLabel>Ports</FormLabel>
                   <FormControl>
                     <Input 
-                      {...field} 
-                      value={field.value?.join(",")} 
-                      onChange={e => field.onChange(e.target.value.split(",").map(p => parseInt(p.trim())))}
+                      value={field.value.join(",")}
+                      onChange={(e) => field.onChange(
+                        e.target.value.split(",").map((p) => parseInt(p.trim()))
+                      )}
                       placeholder="e.g., 80,443,8080"
                     />
                   </FormControl>

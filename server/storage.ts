@@ -87,8 +87,16 @@ export class MemStorage implements IStorage {
   async createRole(insertRole: InsertRole): Promise<Role> {
     const id = this.roleCurrentId++;
     const role: Role = {
-      ...insertRole,
       id,
+      name: insertRole.name,
+      description: insertRole.description || "",
+      permissions: {
+        canView: true,
+        canEdit: false,
+        canDelete: false,
+        canManageACLs: false,
+        ...insertRole.permissions,
+      },
     };
     this.roles.set(id, role);
     return role;
@@ -98,7 +106,14 @@ export class MemStorage implements IStorage {
     const role = await this.getRole(id);
     if (!role) return undefined;
 
-    const updatedRole = { ...role, ...update };
+    const updatedRole = { 
+      ...role,
+      ...update,
+      permissions: {
+        ...role.permissions,
+        ...update.permissions,
+      },
+    };
     this.roles.set(id, updatedRole);
     return updatedRole;
   }
@@ -119,8 +134,11 @@ export class MemStorage implements IStorage {
   async createAcl(insertAcl: InsertAcl): Promise<Acl> {
     const id = this.aclCurrentId++;
     const acl: Acl = {
-      ...insertAcl,
       id,
+      name: insertAcl.name,
+      description: insertAcl.description || "",
+      rules: insertAcl.rules,
+      roleId: insertAcl.roleId,
       enabled: insertAcl.enabled ?? true,
       priority: this.aclCurrentId,
     };
