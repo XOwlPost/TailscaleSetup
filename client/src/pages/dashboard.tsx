@@ -12,7 +12,7 @@ import type { Node, Acl } from "@shared/schema";
 import { type ReactNode } from "react";
 
 export default function Dashboard() {
-  const { widgets, addWidget, removeWidget } = useWidgetStore();
+  const { widgets, addWidget, removeWidget, updateWidgetPosition } = useWidgetStore();
   const nodesQuery = useQuery<Node[]>({ 
     queryKey: ["/api/nodes"]
   });
@@ -41,16 +41,26 @@ export default function Dashboard() {
     });
   };
 
-  const widgetElements = widgets.map((widget) => (
-    <DashboardWidget
-      key={widget.id}
-      id={widget.id}
-      title={widget.title}
-      onRemove={() => removeWidget(widget.id)}
-    >
-      {widget.type === "node-monitor" && <NodeMonitor />}
-    </DashboardWidget>
-  ));
+  const handleReorder = (reorderedWidgets: ReactNode[]) => {
+    reorderedWidgets.forEach((widget, index) => {
+      const widgetElement = widget as React.ReactElement;
+      const widgetId = widgetElement.props.id;
+      updateWidgetPosition(widgetId, index);
+    });
+  };
+
+  const widgetElements = widgets
+    .sort((a, b) => a.position - b.position)
+    .map((widget) => (
+      <DashboardWidget
+        key={widget.id}
+        id={widget.id}
+        title={widget.title}
+        onRemove={() => removeWidget(widget.id)}
+      >
+        {widget.type === "node-monitor" && <NodeMonitor />}
+      </DashboardWidget>
+    ));
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -65,7 +75,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <GridLayout>
+        <GridLayout onReorder={handleReorder}>
           {widgetElements.map((widget) => (
             <GridItem key={(widget as React.ReactElement).key}>
               {widget}

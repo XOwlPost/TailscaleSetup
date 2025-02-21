@@ -54,7 +54,7 @@ export function GridItem({
     <Reorder.Item
       value={children}
       className={`w-full ${className}`}
-      dragListener={false}
+      dragListener={true}
       layout
     >
       <motion.div
@@ -62,6 +62,7 @@ export function GridItem({
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
+        whileDrag={{ scale: 1.02, boxShadow: "0 8px 20px rgba(0,0,0,0.1)" }}
         transition={{ duration: 0.2 }}
         className="h-full w-full"
       >
