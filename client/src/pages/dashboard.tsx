@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { DashboardWidget } from "@/components/dashboard/widget";
 import { GridLayout, GridItem } from "@/components/dashboard/grid-layout";
 import { useWidgetStore, type Widget } from "@/components/dashboard/widget-store";
+import { WidgetRecommendations } from "@/components/dashboard/widget-recommendations";
 import type { Node, Acl } from "@shared/schema";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export default function Dashboard() {
-  const { widgets, addWidget, removeWidget, updateWidgetPosition } = useWidgetStore();
+  const { widgets, addWidget, removeWidget, updateWidgetPosition, recordInteraction } = useWidgetStore();
   const nodesQuery = useQuery<Node[]>({ 
     queryKey: ["/api/nodes"]
   });
@@ -46,6 +47,7 @@ export default function Dashboard() {
       const widgetElement = widget as React.ReactElement;
       const widgetId = widgetElement.props.id;
       updateWidgetPosition(widgetId, index);
+      recordInteraction(widgetId);
     });
   };
 
@@ -57,6 +59,7 @@ export default function Dashboard() {
         id={widget.id}
         title={widget.title}
         onRemove={() => removeWidget(widget.id)}
+        onClick={() => recordInteraction(widget.id)}
       >
         {widget.type === "node-monitor" && <NodeMonitor />}
       </DashboardWidget>
@@ -73,6 +76,8 @@ export default function Dashboard() {
           Add Widget
         </Button>
       </div>
+
+      <WidgetRecommendations />
 
       <div className="space-y-6">
         <div className="w-full">
