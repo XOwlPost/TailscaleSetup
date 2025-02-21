@@ -53,7 +53,9 @@ export function GridItem({ children, className = "" }: GridItemProps) {
           }}
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           transition={{ 
-            duration: 0.2,
+            type: "spring",
+            stiffness: 300,
+            damping: 20,
             rotate: {
               repeat: isDragging ? Infinity : 0,
               duration: 0.5,
