@@ -1,10 +1,46 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { WebSocket, WebSocketServer } from "ws";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Create WebSocket server for real-time updates
+const wss = new WebSocketServer({ noServer: true });
+
+// Track connected clients
+const clients = new Set<WebSocket>();
+
+wss.on('connection', (ws) => {
+  clients.add(ws);
+
+  ws.on('close', () => {
+    clients.delete(ws);
+  });
+
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+      if (data.type === 'node_status') {
+        // Broadcast node status to all connected clients
+        const broadcastData = JSON.stringify({
+          type: 'node_status_update',
+          data: data.status
+        });
+
+        clients.forEach(client => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(broadcastData);
+          }
+        });
+      }
+    } catch (error) {
+      log(`WebSocket message error: ${error}`);
+    }
+  });
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -47,17 +83,23 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Setup WebSocket handling on the HTTP server
+  server.on('upgrade', (request, socket, head) => {
+    if (request.url === '/ws') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    } else {
+      socket.destroy();
+    }
+  });
+
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
   const port = 5000;
   server.listen({
     port,
