@@ -1,6 +1,6 @@
 agent0:
   service_manager_url: "http://localhost:5000"
-  
+
   tasks:
     - name: "monitor_tailscale"
       command: "tailscale status --json"
@@ -12,6 +12,29 @@ agent0:
       schedule: "every 1m"
       on_failure: "tailscale up --reset"
 
+    - name: "monitor_ssh"
+      command: "journalctl -u ssh --no-pager | grep error"
+      schedule: "every 5m"
+      on_failure: "systemctl restart ssh"
+
+    - name: "monitor_system_resources"
+      command: "top -bn1 | grep 'Cpu\\|Mem'"
+      schedule: "every 1m"
+      on_failure: |
+        if [[ $(top -bn1 | grep 'Cpu' | awk '{print $2}' | cut -d. -f1) -gt 90 ]]; then
+          echo "High CPU usage detected" >> /var/log/agent0/alerts.log
+        fi
+
+    - name: "check_packet_loss"
+      command: "ping -c 5 1.1.1.1 | grep 'packet loss'"
+      schedule: "every 2m"
+      on_failure: "systemctl restart networking"
+
+    - name: "check_dns_health"
+      command: "nslookup google.com"
+      schedule: "every 5m"
+      on_failure: "systemctl restart systemd-resolved"
+
     - name: "report_status"
       command: "curl -X POST ${service_manager_url}/api/nodes/${node_id}/status"
       schedule: "every 1m"
@@ -20,7 +43,19 @@ agent0:
     - name: "tailscale_peers"
       type: "gauge"
       command: "tailscale status --json | jq '.Peer | length'"
-      
+
     - name: "network_latency"
       type: "histogram"
       command: "ping -c 1 100.100.100.100 | grep time= | cut -d= -f4"
+
+    - name: "cpu_usage"
+      type: "gauge"
+      command: "top -bn1 | grep 'Cpu' | awk '{print $2}'"
+
+    - name: "memory_usage"
+      type: "gauge"
+      command: "free | grep Mem | awk '{print $3/$2 * 100.0}'"
+
+    - name: "packet_loss"
+      type: "gauge"
+      command: "ping -c 5 1.1.1.1 | grep 'packet loss' | cut -d',' -f3 | cut -d'%' -f1"
