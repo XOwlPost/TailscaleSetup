@@ -38,7 +38,8 @@ export function NodeMonitor() {
         if (data.type === 'node_status_update') {
           setStatus(data.data);
           setError(null);
-          calculateHealthScore(data.data);
+          const newScore = calculateHealthScore(data.data);
+          setHealthScore(newScore);
         }
       } catch (err) {
         setError("Failed to parse status update");
@@ -58,10 +59,12 @@ export function NodeMonitor() {
       setShowConfetti(true);
       const timer = setTimeout(() => setShowConfetti(false), 5000);
       return () => clearTimeout(timer);
+    } else {
+      setShowConfetti(false);
     }
   }, [healthScore]);
 
-  const calculateHealthScore = (status: NodeStatus) => {
+  const calculateHealthScore = (status: NodeStatus): number => {
     let score = 100;
 
     // CPU penalty (max -30)
@@ -87,7 +90,7 @@ export function NodeMonitor() {
     // Tailscale status penalty (-10 if offline)
     if (status.tailscale.includes("offline")) score -= 10;
 
-    setHealthScore(Math.max(0, score));
+    return Math.max(0, score);
   };
 
   const getStatusColor = (value: number, thresholds: { warning: number; critical: number }) => {
@@ -128,8 +131,17 @@ export function NodeMonitor() {
           width={width}
           height={height}
           recycle={false}
-          numberOfPieces={200}
-          gravity={0.3}
+          numberOfPieces={500}
+          gravity={0.2}
+          initialVelocityY={20}
+          colors={['#22c55e', '#3b82f6', '#f59e0b', '#ec4899']}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            zIndex: 50,
+            pointerEvents: 'none'
+          }}
         />
       )}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -182,7 +194,7 @@ export function NodeMonitor() {
                     getStatusColor(cpuUsage, { warning: 70, critical: 90 })
                   )}>{cpuUsage}%</span>
                 </div>
-                <Progress 
+                <Progress
                   value={cpuUsage}
                   className={cn(
                     "transition-all duration-500",
@@ -198,7 +210,7 @@ export function NodeMonitor() {
                     getStatusColor(memoryUsage, { warning: 80, critical: 95 })
                   )}>{memoryUsage}%</span>
                 </div>
-                <Progress 
+                <Progress
                   value={memoryUsage}
                   className={cn(
                     "transition-all duration-500",
@@ -231,7 +243,7 @@ export function NodeMonitor() {
                     getStatusColor(packetLoss, { warning: 5, critical: 10 })
                   )}>{packetLoss}%</span>
                 </div>
-                <Progress 
+                <Progress
                   value={packetLoss}
                   className={cn(
                     "transition-all duration-500",
@@ -243,8 +255,8 @@ export function NodeMonitor() {
                 <span>Tailscale:</span>
                 <div className={cn(
                   "w-2 h-2 rounded-full",
-                  status?.tailscale.includes("offline") 
-                    ? "bg-red-500 animate-pulse" 
+                  status?.tailscale.includes("offline")
+                    ? "bg-red-500 animate-pulse"
                     : "bg-green-500 animate-pulse"
                 )} />
                 <span className={status?.tailscale.includes("offline") ? "text-red-500" : "text-green-500"}>
@@ -270,8 +282,8 @@ export function NodeMonitor() {
                   <div className="flex items-center gap-2">
                     <div className={cn(
                       "w-2 h-2 rounded-full",
-                      state === "active" 
-                        ? "bg-green-500 animate-pulse" 
+                      state === "active"
+                        ? "bg-green-500 animate-pulse"
                         : "bg-red-500 animate-pulse"
                     )} />
                     <span className={state === "active" ? "text-green-500" : "text-red-500"}>
