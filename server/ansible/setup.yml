@@ -1,0 +1,39 @@
+---
+- name: Setup Tailscale Node
+  hosts: all
+  become: yes
+  vars:
+    tailscale_auth_key: "{{ auth_key }}"
+    node_tags: "{{ tags | default([]) }}"
+
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - python3
+          - python3-pip
+        state: present
+        update_cache: yes
+
+    - name: Install Tailscale
+      shell: curl -fsSL https://tailscale.com/install.sh | sh
+      args:
+        creates: /usr/bin/tailscale
+
+    - name: Join Tailscale network
+      command: >
+        tailscale up 
+        --authkey={{ tailscale_auth_key }}
+        --hostname={{ inventory_hostname }}
+        {% if node_tags %}--advertise-tags={{ node_tags | join(',') }}{% endif %}
+
+    - name: Install Agent0
+      pip:
+        name: agent0
+        state: latest
+
+    - name: Copy Agent0 config
+      copy:
+        src: ../agent0/config.yml
+        dest: /etc/agent0/config.yml

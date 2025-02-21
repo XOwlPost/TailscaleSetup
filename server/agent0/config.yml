@@ -1,0 +1,26 @@
+agent0:
+  service_manager_url: "http://localhost:5000"
+  
+  tasks:
+    - name: "monitor_tailscale"
+      command: "tailscale status --json"
+      schedule: "every 5m"
+      on_failure: "tailscale up --reset"
+
+    - name: "check_connectivity"
+      command: "ping -c 1 100.100.100.100"
+      schedule: "every 1m"
+      on_failure: "tailscale up --reset"
+
+    - name: "report_status"
+      command: "curl -X POST ${service_manager_url}/api/nodes/${node_id}/status"
+      schedule: "every 1m"
+
+  metrics:
+    - name: "tailscale_peers"
+      type: "gauge"
+      command: "tailscale status --json | jq '.Peer | length'"
+      
+    - name: "network_latency"
+      type: "histogram"
+      command: "ping -c 1 100.100.100.100 | grep time= | cut -d= -f4"
