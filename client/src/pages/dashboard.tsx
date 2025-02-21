@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Server, Network, Shield } from "lucide-react";
 import { NodeMonitor } from "@/components/node-monitor";
+import { TourGuide } from "@/components/tour-guide";
 import type { Node, Acl } from "@shared/schema";
 
 export default function Dashboard() {
@@ -37,6 +38,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <TourGuide />
       <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -71,7 +73,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8" data-tour="node-monitor">
         <h2 className="text-2xl font-semibold mb-4">Real-time Node Monitoring</h2>
         <NodeMonitor />
       </div>
