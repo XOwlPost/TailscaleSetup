@@ -41,6 +41,7 @@ const clients = new Set<WebSocket>();
 
 wss.on('connection', (ws) => {
   clients.add(ws);
+  healingAgent.addClient(ws);
 
   // Send initial test data
   const initialMetrics = generateTestMetrics();
@@ -73,6 +74,7 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     clients.delete(ws);
+    healingAgent.removeClient(ws);
     clearInterval(intervalId);
   });
 

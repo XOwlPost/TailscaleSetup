@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Server, Network, Shield, Plus } from "lucide-react";
 import { NodeMonitor } from "@/components/node-monitor";
+import { LogViewer } from "@/components/log-viewer";
 import { TourGuide } from "@/components/tour-guide";
 import { Button } from "@/components/ui/button";
 import { DashboardWidget } from "@/components/dashboard/widget";
@@ -51,18 +52,6 @@ export default function Dashboard() {
     </DashboardWidget>
   ));
 
-  const handleReorder = (reorderedWidgets: ReactNode[]) => {
-    // Update widget positions based on new order
-    reorderedWidgets.forEach((widget, index) => {
-      const widgetElement = widget as React.ReactElement;
-      const widgetId = widgetElement.props.id;
-      const existingWidget = widgets.find(w => w.id === widgetId);
-      if (existingWidget) {
-        existingWidget.position = index;
-      }
-    });
-  };
-
   return (
     <div className="container mx-auto p-4 space-y-6">
       <TourGuide />
@@ -75,13 +64,16 @@ export default function Dashboard() {
         </Button>
       </div>
 
-      <GridLayout onReorder={handleReorder}>
-        {widgetElements.map((widget) => (
-          <GridItem key={(widget as React.ReactElement).key}>
-            {widget}
-          </GridItem>
-        ))}
-      </GridLayout>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <GridLayout>
+          {widgetElements.map((widget) => (
+            <GridItem key={(widget as React.ReactElement).key}>
+              {widget}
+            </GridItem>
+          ))}
+        </GridLayout>
+        <LogViewer />
+      </div>
     </div>
   );
 }

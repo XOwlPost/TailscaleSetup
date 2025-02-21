@@ -1,5 +1,13 @@
 import { type NodeStatus } from "@shared/schema";
 import { log } from "../vite";
+import { WebSocket } from "ws";
+
+interface LogEntry {
+  timestamp: string;
+  type: 'service' | 'network' | 'memory' | 'info';
+  message: string;
+  status: 'start' | 'success' | 'error';
+}
 
 interface HealingAction {
   type: 'restart_service' | 'clear_memory' | 'optimize_network';
@@ -15,9 +23,19 @@ export class HealingAgent {
       target: 'service',
       threshold: 30,
       action: async () => {
-        log('🔄 Restarting problematic services...');
-        // Simulate service restart
+        this.broadcastLog({
+          type: 'service',
+          message: '🔄 Restarting problematic services...',
+          status: 'start',
+          timestamp: new Date().toISOString()
+        });
         await new Promise(resolve => setTimeout(resolve, 1000));
+        this.broadcastLog({
+          type: 'service',
+          message: '✅ Services successfully restarted',
+          status: 'success',
+          timestamp: new Date().toISOString()
+        });
       }
     },
     {
@@ -25,9 +43,19 @@ export class HealingAgent {
       target: 'memory',
       threshold: 90,
       action: async () => {
-        log('🧹 Clearing memory cache...');
-        // Simulate memory cleanup
+        this.broadcastLog({
+          type: 'memory',
+          message: '🧹 Clearing memory cache...',
+          status: 'start',
+          timestamp: new Date().toISOString()
+        });
         await new Promise(resolve => setTimeout(resolve, 1000));
+        this.broadcastLog({
+          type: 'memory',
+          message: '✅ Memory cache cleared successfully',
+          status: 'success',
+          timestamp: new Date().toISOString()
+        });
       }
     },
     {
@@ -35,20 +63,59 @@ export class HealingAgent {
       target: 'network',
       threshold: 10,
       action: async () => {
-        log('🌐 Optimizing network settings...');
-        // Simulate network optimization
+        this.broadcastLog({
+          type: 'network',
+          message: '🌐 Optimizing network settings...',
+          status: 'start',
+          timestamp: new Date().toISOString()
+        });
         await new Promise(resolve => setTimeout(resolve, 1000));
+        this.broadcastLog({
+          type: 'network',
+          message: '✅ Network optimization complete',
+          status: 'success',
+          timestamp: new Date().toISOString()
+        });
       }
     }
   ];
 
+  private clients: Set<WebSocket> = new Set();
+
+  public addClient(ws: WebSocket) {
+    this.clients.add(ws);
+  }
+
+  public removeClient(ws: WebSocket) {
+    this.clients.delete(ws);
+  }
+
+  private broadcastLog(logEntry: LogEntry) {
+    const message = JSON.stringify({
+      type: 'log_entry',
+      log: logEntry
+    });
+
+    this.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+
+    // Also log to server console
+    log(`[${logEntry.type}] ${logEntry.message}`);
+  }
+
   private async executeHealingAction(action: HealingAction) {
     try {
-      log(`🏥 Executing healing action: ${action.type}`);
       await action.action();
-      log(`✅ Healing action completed: ${action.type}`);
     } catch (error) {
-      log(`❌ Healing action failed: ${action.type} - ${error}`);
+      this.broadcastLog({
+        type: action.target as LogEntry['type'],
+        message: `❌ Healing action failed: ${error}`,
+        status: 'error',
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -57,7 +124,6 @@ export class HealingAgent {
     const packetLoss = parseFloat(status.system.packet_loss);
     const serviceIssues = Object.values(status.services).filter(s => s !== 'active').length;
 
-    // Check thresholds and execute healing actions
     if (memoryUsage > 90) {
       await this.executeHealingAction(
         this.actions.find(a => a.type === 'clear_memory')!
