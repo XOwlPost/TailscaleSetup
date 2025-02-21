@@ -14,7 +14,8 @@ interface LogEntry {
 
 export function LogViewer() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
 
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -25,7 +26,14 @@ export function LogViewer() {
         const data = JSON.parse(event.data);
         if (data.type === 'log_entry') {
           setLogs(prev => [...prev, data.log].slice(-100)); // Keep last 100 logs
-          scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+          if (autoScroll && scrollAreaRef.current) {
+            const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+            if (scrollContainer) {
+              setTimeout(() => {
+                scrollContainer.scrollTop = scrollContainer.scrollHeight;
+              }, 0);
+            }
+          }
         }
       } catch (error) {
         console.error('Failed to parse log entry:', error);
@@ -33,7 +41,7 @@ export function LogViewer() {
     };
 
     return () => ws.close();
-  }, []);
+  }, [autoScroll]);
 
   const getLogIcon = (type: LogEntry['type']) => {
     switch (type) {
@@ -64,14 +72,27 @@ export function LogViewer() {
   return (
     <Card className="h-[600px] flex flex-col">
       <CardHeader className="flex-none p-4">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <Terminal className="h-5 w-5" />
-          System Logs
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <Terminal className="h-5 w-5" />
+            System Logs
+          </CardTitle>
+          <Badge
+            variant="outline"
+            className="cursor-pointer"
+            onClick={() => setAutoScroll(!autoScroll)}
+          >
+            {autoScroll ? 'Auto-scroll: On' : 'Auto-scroll: Off'}
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent className="flex-1 p-4 pt-0">
-        <ScrollArea className="h-[500px] pr-4">
-          <div className="space-y-2">
+      <CardContent className="flex-1 p-4 pt-0 overflow-hidden">
+        <ScrollArea 
+          ref={scrollAreaRef}
+          className="h-[500px]"
+          onWheel={() => setAutoScroll(false)}
+        >
+          <div className="space-y-2 pr-4">
             {logs.map((log, index) => (
               <div
                 key={index}
@@ -94,7 +115,6 @@ export function LogViewer() {
                 </div>
               </div>
             ))}
-            <div ref={scrollRef} />
           </div>
         </ScrollArea>
       </CardContent>
