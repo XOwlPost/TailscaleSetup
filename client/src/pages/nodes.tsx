@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { NodeCard } from "@/components/node-card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { AddNodeDialog } from "@/components/add-node-dialog";
 import { useToast } from "@/hooks/use-toast";
 import type { Node } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Nodes() {
   const { toast } = useToast();
@@ -14,7 +14,7 @@ export default function Nodes() {
 
   const handleRestart = async (nodeId: number) => {
     try {
-      await fetch(`/api/nodes/${nodeId}/restart`, { method: 'POST' });
+      await apiRequest("POST", `/api/nodes/${nodeId}/restart`, undefined);
       toast({
         title: "Node restart initiated",
         description: "The node will restart shortly."
@@ -32,10 +32,7 @@ export default function Nodes() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Nodes</h1>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Node
-        </Button>
+        <AddNodeDialog />
       </div>
 
       {nodesQuery.isLoading ? (

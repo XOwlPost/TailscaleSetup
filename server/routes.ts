@@ -40,6 +40,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(node);
   });
 
+  // Add new endpoint for node restart
+  app.post("/api/nodes/:id/restart", async (req, res) => {
+    const { id } = req.params;
+    const node = await storage.getNode(Number(id));
+
+    if (!node) {
+      return res.status(404).json({ error: "Node not found" });
+    }
+
+    try {
+      await execAsync(`tailscale up --reset --hostname=${node.hostname}`);
+      const updatedNode = await storage.updateNodeStatus(Number(id), "pending");
+      res.json(updatedNode);
+    } catch (error) {
+      res.status(500).json({ error: String(error) });
+    }
+  });
+
   // ACL management endpoints
   app.get("/api/acls", async (_req, res) => {
     const acls = await storage.getAcls();
