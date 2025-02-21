@@ -28,19 +28,22 @@ export function GridLayout({
   }, [width]);
 
   return (
-    <Reorder.Group 
-      axis="both"
-      values={children}
-      onReorder={onReorder}
+    <div 
       className={`grid gap-6 ${className}`}
       style={{
         gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-        width: '100%',
-        display: 'grid'
+        width: '100%'
       }}
     >
-      {children}
-    </Reorder.Group>
+      <Reorder.Group 
+        axis="y"
+        values={children}
+        onReorder={onReorder}
+        style={{ display: 'contents' }}
+      >
+        {children}
+      </Reorder.Group>
+    </div>
   );
 }
 
@@ -56,7 +59,8 @@ export function GridItem({
       value={children}
       className={`w-full ${className}`}
       dragListener={true}
-      drag
+      dragControls
+      dragMomentum={false}
     >
       <motion.div
         layout
@@ -64,12 +68,17 @@ export function GridItem({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         whileDrag={{ 
-          scale: 1.02, 
+          scale: 1.02,
+          zIndex: 50,
           boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
-          zIndex: 50
+          backgroundColor: "var(--background)",
+          opacity: 1
         }}
-        transition={{ duration: 0.2 }}
-        className="h-full w-full cursor-move"
+        transition={{ 
+          duration: 0.2,
+          layout: { duration: 0.2 }
+        }}
+        className="h-full w-full cursor-move bg-background"
       >
         {children}
       </motion.div>
