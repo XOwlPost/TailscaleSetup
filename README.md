@@ -64,6 +64,12 @@ npm run dev
 - Run `npm run dev` to start the development server
 - Run `npm run build` to create a production build
 
+## Latest Updates
+
+- Added auto-scroll toggle for system logs
+- Improved dashboard widget responsiveness
+- Enhanced drag-and-drop functionality
+
 ## Server Logs
 
 The system provides detailed logging of all healing actions:
