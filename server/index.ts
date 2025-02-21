@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { WebSocket, WebSocketServer } from "ws";
+import { healingAgent } from "./agent0/healing-agent";
 
 const app = express();
 app.use(express.json());
@@ -42,17 +43,30 @@ wss.on('connection', (ws) => {
   clients.add(ws);
 
   // Send initial test data
+  const initialMetrics = generateTestMetrics();
   ws.send(JSON.stringify({
     type: 'node_status_update',
-    data: generateTestMetrics()
+    data: initialMetrics
   }));
 
+  // Activate healing agent for initial status
+  healingAgent.checkAndHeal(initialMetrics).catch(error => {
+    log(`Error in healing agent: ${error}`);
+  });
+
   // Simulate periodic updates every 3 seconds
-  const intervalId = setInterval(() => {
+  const intervalId = setInterval(async () => {
     if (ws.readyState === WebSocket.OPEN) {
+      const metrics = generateTestMetrics();
+
+      // Check and heal if needed
+      await healingAgent.checkAndHeal(metrics).catch(error => {
+        log(`Error in healing agent: ${error}`);
+      });
+
       ws.send(JSON.stringify({
         type: 'node_status_update',
-        data: generateTestMetrics()
+        data: metrics
       }));
     }
   }, 3000);
