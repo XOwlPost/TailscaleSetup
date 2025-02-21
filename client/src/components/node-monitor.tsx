@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Check, Cpu, Network, Terminal } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
 
 interface NodeStatus {
   tailscale: string;
@@ -21,6 +22,7 @@ interface NodeStatus {
 export function NodeMonitor() {
   const [status, setStatus] = useState<NodeStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [healthScore, setHealthScore] = useState(100);
 
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -32,6 +34,7 @@ export function NodeMonitor() {
         if (data.type === 'node_status_update') {
           setStatus(data.data);
           setError(null);
+          calculateHealthScore(data.data);
         }
       } catch (err) {
         setError("Failed to parse status update");
@@ -45,6 +48,35 @@ export function NodeMonitor() {
     return () => ws.close();
   }, []);
 
+  const calculateHealthScore = (status: NodeStatus) => {
+    let score = 100;
+
+    // CPU penalty (max -30)
+    const cpuUsage = parseFloat(status.system.cpu);
+    if (cpuUsage > 90) score -= 30;
+    else if (cpuUsage > 70) score -= 15;
+
+    // Memory penalty (max -30)
+    const memoryUsage = parseFloat(status.system.memory);
+    if (memoryUsage > 90) score -= 30;
+    else if (memoryUsage > 70) score -= 15;
+
+    // Packet loss penalty (max -20)
+    const packetLoss = parseFloat(status.system.packet_loss);
+    if (packetLoss > 10) score -= 20;
+    else if (packetLoss > 5) score -= 10;
+
+    // Service status penalty (-5 per inactive service)
+    Object.values(status.services).forEach(serviceStatus => {
+      if (serviceStatus !== "active") score -= 5;
+    });
+
+    // Tailscale status penalty (-10 if offline)
+    if (status.tailscale.includes("offline")) score -= 10;
+
+    setHealthScore(Math.max(0, score));
+  };
+
   const getStatusColor = (value: number, thresholds: { warning: number; critical: number }) => {
     if (value >= thresholds.critical) return "text-red-500";
     if (value >= thresholds.warning) return "text-yellow-500";
@@ -55,6 +87,12 @@ export function NodeMonitor() {
     if (value >= thresholds.critical) return "animate-pulse";
     if (value >= thresholds.warning) return "animate-bounce";
     return "animate-pulse";
+  };
+
+  const getHealthScoreColor = (score: number) => {
+    if (score < 50) return "bg-red-500";
+    if (score < 75) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   if (error) {
@@ -72,6 +110,34 @@ export function NodeMonitor() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Health Score Card */}
+      <Card className="col-span-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Check className={cn(
+              "h-4 w-4",
+              getHealthScoreColor(healthScore)
+            )} />
+            System Health Score
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span>Overall Health:</span>
+              <span className={cn(
+                "font-bold",
+                getHealthScoreColor(healthScore)
+              )}>{healthScore}%</span>
+            </div>
+            <Progress value={healthScore} className={cn(
+              "transition-all duration-500",
+              getHealthScoreColor(healthScore)
+            )} />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -93,16 +159,13 @@ export function NodeMonitor() {
                   getStatusColor(cpuUsage, { warning: 70, critical: 90 })
                 )}>{cpuUsage}%</span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full transition-all duration-500",
-                    getStatusColor(cpuUsage, { warning: 70, critical: 90 }),
-                    "animate-pulse"
-                  )}
-                  style={{ width: `${cpuUsage}%` }}
-                />
-              </div>
+              <Progress 
+                value={cpuUsage}
+                className={cn(
+                  "transition-all duration-500",
+                  getStatusColor(cpuUsage, { warning: 70, critical: 90 })
+                )}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
@@ -112,16 +175,13 @@ export function NodeMonitor() {
                   getStatusColor(memoryUsage, { warning: 80, critical: 95 })
                 )}>{memoryUsage}%</span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full transition-all duration-500",
-                    getStatusColor(memoryUsage, { warning: 80, critical: 95 }),
-                    "animate-pulse"
-                  )}
-                  style={{ width: `${memoryUsage}%` }}
-                />
-              </div>
+              <Progress 
+                value={memoryUsage}
+                className={cn(
+                  "transition-all duration-500",
+                  getStatusColor(memoryUsage, { warning: 80, critical: 95 })
+                )}
+              />
             </div>
           </div>
         </CardContent>
@@ -148,16 +208,13 @@ export function NodeMonitor() {
                   getStatusColor(packetLoss, { warning: 5, critical: 10 })
                 )}>{packetLoss}%</span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full transition-all duration-500",
-                    getStatusColor(packetLoss, { warning: 5, critical: 10 }),
-                    "animate-pulse"
-                  )}
-                  style={{ width: `${packetLoss}%` }}
-                />
-              </div>
+              <Progress 
+                value={packetLoss}
+                className={cn(
+                  "transition-all duration-500",
+                  getStatusColor(packetLoss, { warning: 5, critical: 10 })
+                )}
+              />
             </div>
             <div className="flex items-center gap-2 mt-4">
               <span>Tailscale:</span>

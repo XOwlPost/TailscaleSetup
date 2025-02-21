@@ -9,12 +9,20 @@ app.use(express.urlencoded({ extended: false }));
 
 // Simulate node metrics for testing animations
 function generateTestMetrics() {
+  const cpuUsage = (60 + Math.random() * 35).toFixed(1); // Varies between 60-95%
+  const memoryUsage = (70 + Math.random() * 25).toFixed(1); // Varies between 70-95%
+  const packetLoss = (Math.random() * 12).toFixed(1); // Varies between 0-12%
+
+  // Calculate simulated load based on time of day
+  const hour = new Date().getHours();
+  const loadFactor = hour >= 9 && hour <= 17 ? 1.2 : 0.8; // Higher load during business hours
+
   return {
     tailscale: Math.random() > 0.1 ? "online" : "offline",
     system: {
-      cpu: (60 + Math.random() * 35).toFixed(1), // Varies between 60-95%
-      memory: (70 + Math.random() * 25).toFixed(1), // Varies between 70-95%
-      packet_loss: (Math.random() * 12).toFixed(1), // Varies between 0-12%
+      cpu: (parseFloat(cpuUsage) * loadFactor).toFixed(1),
+      memory: (parseFloat(memoryUsage) * loadFactor).toFixed(1),
+      packet_loss: packetLoss,
     },
     services: {
       ssh: Math.random() > 0.1 ? "active" : "inactive",
