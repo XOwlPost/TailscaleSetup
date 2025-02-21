@@ -53,7 +53,6 @@ export function NodeMonitor() {
     return () => ws.close();
   }, []);
 
-  // Effect to handle confetti display
   useEffect(() => {
     if (healthScore >= 95) {
       setShowConfetti(true);
@@ -67,27 +66,22 @@ export function NodeMonitor() {
   const calculateHealthScore = (status: NodeStatus): number => {
     let score = 100;
 
-    // CPU penalty (max -30)
     const cpuUsage = parseFloat(status.system.cpu);
     if (cpuUsage > 90) score -= 30;
     else if (cpuUsage > 70) score -= 15;
 
-    // Memory penalty (max -30)
     const memoryUsage = parseFloat(status.system.memory);
     if (memoryUsage > 90) score -= 30;
     else if (memoryUsage > 70) score -= 15;
 
-    // Packet loss penalty (max -20)
     const packetLoss = parseFloat(status.system.packet_loss);
     if (packetLoss > 10) score -= 20;
     else if (packetLoss > 5) score -= 10;
 
-    // Service status penalty (-5 per inactive service)
     Object.values(status.services).forEach(serviceStatus => {
       if (serviceStatus !== "active") score -= 5;
     });
 
-    // Tailscale status penalty (-10 if offline)
     if (status.tailscale.includes("offline")) score -= 10;
 
     return Math.max(0, score);
@@ -144,154 +138,131 @@ export function NodeMonitor() {
           }}
         />
       )}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Health Score Card - Full width on all screens */}
-        <Card className="col-span-1 sm:col-span-2 lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+      <div className="grid gap-4">
+        <Card>
+          <CardHeader className="p-4">
+            <CardTitle className="flex items-center gap-2 text-sm">
               <Check className={cn(
-                "h-4 w-4 sm:h-5 sm:w-5",
+                "h-4 w-4",
                 getHealthScoreColor(healthScore)
               )} />
               System Health Score
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base">Overall Health:</span>
+          <CardContent className="p-4 pt-0">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span>Overall Health:</span>
                 <span className={cn(
-                  "font-bold text-sm sm:text-base",
+                  "font-medium",
                   getHealthScoreColor(healthScore)
                 )}>{healthScore}%</span>
               </div>
-              <Progress value={healthScore} className={cn(
-                "transition-all duration-500",
-                getHealthScoreColor(healthScore)
-              )} />
+              <Progress 
+                value={healthScore} 
+                className={cn(
+                  "transition-all duration-500",
+                  getHealthScoreColor(healthScore)
+                )} 
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* System Resources Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Cpu className={cn(
-                "h-4 w-4 sm:h-5 sm:w-5",
-                getStatusColor(cpuUsage, { warning: 70, critical: 90 }),
-                getStatusAnimation(cpuUsage, { warning: 70, critical: 90 })
-              )} />
-              System Resources
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center">
-                <span>CPU Usage:</span>
-                <span className={cn(
-                  "font-bold",
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Cpu className={cn(
+                  "h-4 w-4",
                   getStatusColor(cpuUsage, { warning: 70, critical: 90 })
-                )}>{cpuUsage}%</span>
-              </div>
-              <Progress
-                value={cpuUsage}
-                className={cn(
-                  "transition-all duration-500",
-                  getStatusColor(cpuUsage, { warning: 70, critical: 90 })
-                )}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center">
-                <span>Memory Usage:</span>
-                <span className={cn(
-                  "font-bold",
-                  getStatusColor(memoryUsage, { warning: 80, critical: 95 })
-                )}>{memoryUsage}%</span>
-              </div>
-              <Progress
-                value={memoryUsage}
-                className={cn(
-                  "transition-all duration-500",
-                  getStatusColor(memoryUsage, { warning: 80, critical: 95 })
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Network Status Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Network className={cn(
-                "h-4 w-4 sm:h-5 sm:w-5",
-                getStatusColor(packetLoss, { warning: 5, critical: 10 }),
-                getStatusAnimation(packetLoss, { warning: 5, critical: 10 })
-              )} />
-              Network Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center">
-                <span>Packet Loss:</span>
-                <span className={cn(
-                  "font-bold",
-                  getStatusColor(packetLoss, { warning: 5, critical: 10 })
-                )}>{packetLoss}%</span>
-              </div>
-              <Progress
-                value={packetLoss}
-                className={cn(
-                  "transition-all duration-500",
-                  getStatusColor(packetLoss, { warning: 5, critical: 10 })
-                )}
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-4">
-              <span>Tailscale:</span>
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                status?.tailscale.includes("offline")
-                  ? "bg-red-500 animate-pulse"
-                  : "bg-green-500 animate-pulse"
-              )} />
-              <span className={status?.tailscale.includes("offline") ? "text-red-500" : "text-green-500"}>
-                {status?.tailscale.includes("offline") ? "Offline" : "Online"}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Services Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Terminal className="h-4 w-4 sm:h-5 sm:w-5" />
-              Services
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {Object.entries(status?.services || {}).map(([service, state]) => (
-              <div key={service} className="flex items-center justify-between">
-                <span className="capitalize">{service}:</span>
-                <div className="flex items-center gap-2">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full",
-                    state === "active"
-                      ? "bg-green-500 animate-pulse"
-                      : "bg-red-500 animate-pulse"
-                  )} />
-                  <span className={state === "active" ? "text-green-500" : "text-red-500"}>
-                    {state === "active" ? "Running" : "Stopped"}
+                )} />
+                Resources
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-sm">
+                  <span>CPU:</span>
+                  <span className={getStatusColor(cpuUsage, { warning: 70, critical: 90 })}>
+                    {cpuUsage}%
                   </span>
                 </div>
+                <Progress value={cpuUsage} className={getStatusColor(cpuUsage, { warning: 70, critical: 90 })} />
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-sm">
+                  <span>Memory:</span>
+                  <span className={getStatusColor(memoryUsage, { warning: 80, critical: 95 })}>
+                    {memoryUsage}%
+                  </span>
+                </div>
+                <Progress value={memoryUsage} className={getStatusColor(memoryUsage, { warning: 80, critical: 95 })} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Network className={cn(
+                  "h-4 w-4",
+                  getStatusColor(packetLoss, { warning: 5, critical: 10 })
+                )} />
+                Network
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-sm">
+                  <span>Packet Loss:</span>
+                  <span className={getStatusColor(packetLoss, { warning: 5, critical: 10 })}>
+                    {packetLoss}%
+                  </span>
+                </div>
+                <Progress value={packetLoss} className={getStatusColor(packetLoss, { warning: 5, critical: 10 })} />
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span>Tailscale:</span>
+                <div className={cn(
+                  "w-2 h-2 rounded-full",
+                  status?.tailscale.includes("offline") ? "bg-red-500" : "bg-green-500",
+                  "animate-pulse"
+                )} />
+                <span className={status?.tailscale.includes("offline") ? "text-red-500" : "text-green-500"}>
+                  {status?.tailscale.includes("offline") ? "Offline" : "Online"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Terminal className="h-4 w-4" />
+                Services
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="space-y-2">
+                {Object.entries(status?.services || {}).map(([service, state]) => (
+                  <div key={service} className="flex items-center justify-between text-sm">
+                    <span className="capitalize">{service}</span>
+                    <div className="flex items-center gap-2">
+                      <div className={cn(
+                        "w-2 h-2 rounded-full animate-pulse",
+                        state === "active" ? "bg-green-500" : "bg-red-500"
+                      )} />
+                      <span className={state === "active" ? "text-green-500" : "text-red-500"}>
+                        {state === "active" ? "Running" : "Stopped"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </>
   );

@@ -26,13 +26,13 @@ export function DashboardWidget({
   return (
     <Card 
       className={cn(
-        "relative h-full transition-shadow break-inside-avoid",
+        "relative transition-shadow h-full w-full",
         isDragging && "shadow-lg ring-2 ring-primary/20",
         className
       )}
       data-widget-id={id}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-4 pt-4">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
         <div className="flex items-center gap-2">
           <Grip 
             className="h-4 w-4 cursor-move text-muted-foreground hidden sm:block" 
@@ -50,8 +50,10 @@ export function DashboardWidget({
           </button>
         )}
       </CardHeader>
-      <CardContent className="px-4 pb-4">
-        {children}
+      <CardContent className="p-4 pt-0 overflow-hidden">
+        <div className="h-full w-full">
+          {children}
+        </div>
       </CardContent>
     </Card>
   );
