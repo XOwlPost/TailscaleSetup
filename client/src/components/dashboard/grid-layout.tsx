@@ -35,6 +35,7 @@ export function GridLayout({
       className={`grid gap-6 ${className}`}
       style={{
         gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+        width: '100%'
       }}
     >
       {children}
@@ -52,7 +53,7 @@ export function GridItem({
   return (
     <Reorder.Item
       value={children}
-      className={className}
+      className={`w-full ${className}`}
       dragListener={false}
       layout
     >
@@ -62,7 +63,7 @@ export function GridItem({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2 }}
-        className="h-full"
+        className="h-full w-full"
       >
         {children}
       </motion.div>
