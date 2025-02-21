@@ -9,6 +9,7 @@ import { DashboardWidget } from "@/components/dashboard/widget";
 import { GridLayout, GridItem } from "@/components/dashboard/grid-layout";
 import { useWidgetStore, type Widget } from "@/components/dashboard/widget-store";
 import { WidgetRecommendations } from "@/components/dashboard/widget-recommendations";
+import { ThemePicker } from "@/components/dashboard/theme-picker";
 import type { Node, Acl } from "@shared/schema";
 import type { ReactNode } from "react";
 
@@ -39,6 +40,10 @@ export default function Dashboard() {
       type: "node-monitor",
       title: "Node Monitor",
       position: widgets.length,
+      theme: {
+        primary: '#3b82f6',
+        background: '#f8fafc'
+      }
     });
   };
 
@@ -58,10 +63,16 @@ export default function Dashboard() {
         key={widget.id}
         id={widget.id}
         title={widget.title}
+        theme={widget.theme}
         onRemove={() => removeWidget(widget.id)}
-        onClick={() => recordInteraction(widget.id)}
+        isConfigurable
       >
-        {widget.type === "node-monitor" && <NodeMonitor />}
+        <div className="flex flex-col h-full">
+          <div className="flex justify-end mb-2">
+            <ThemePicker widgetId={widget.id} currentTheme={widget.theme} />
+          </div>
+          {widget.type === "node-monitor" && <NodeMonitor />}
+        </div>
       </DashboardWidget>
     ));
 

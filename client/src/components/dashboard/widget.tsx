@@ -11,6 +11,12 @@ export interface WidgetProps {
   className?: string;
   onRemove?: () => void;
   isConfigurable?: boolean;
+  theme?: {
+    primary: string;
+    background?: string;
+    text?: string;
+    border?: string;
+  };
 }
 
 export function DashboardWidget({ 
@@ -19,16 +25,26 @@ export function DashboardWidget({
   children, 
   className,
   onRemove,
-  isConfigurable = false
+  isConfigurable = false,
+  theme
 }: WidgetProps) {
+  const customStyle = theme ? {
+    '--widget-primary': theme.primary,
+    '--widget-bg': theme.background || 'hsl(var(--card))',
+    '--widget-text': theme.text || 'hsl(var(--foreground))',
+    '--widget-border': theme.border || 'hsl(var(--border))',
+  } as React.CSSProperties : {};
+
   return (
     <Card 
       className={cn(
-        "relative transition-all duration-200 h-full w-full bg-card hover:bg-accent/5",
-        "focus-within:ring-2 focus-within:ring-primary",
+        "relative transition-all duration-200 h-full w-full",
+        "hover:bg-accent/5 focus-within:ring-2",
         "data-[dragging=true]:opacity-50",
+        theme && "custom-themed-widget",
         className
       )}
+      style={customStyle}
       data-widget-id={id}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">

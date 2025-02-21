@@ -15,6 +15,12 @@ export interface Widget {
     desktop?: number;
     lastUpdated: string;
   };
+  theme?: {
+    primary: string;
+    background?: string;
+    text?: string;
+    border?: string;
+  };
 }
 
 interface WidgetStore {
@@ -24,6 +30,7 @@ interface WidgetStore {
   updateWidgetPosition: (id: string, position: number) => void;
   updateWidgetLayout: (id: string, breakpoint: 'mobile' | 'tablet' | 'desktop', position: number) => void;
   updateWidgetConfig: (id: string, config: Record<string, any>) => void;
+  updateWidgetTheme: (id: string, theme: Widget['theme']) => void;
   recordInteraction: (id: string) => void;
   getRecommendedWidgets: () => Widget['type'][];
 }
@@ -33,6 +40,13 @@ const COMMON_COMBINATIONS = [
   ['system-resources', 'services'],
   ['node-monitor', 'services', 'network-status'],
 ] as const;
+
+const DEFAULT_THEMES = {
+  blue: { primary: '#3b82f6', background: '#f8fafc' },
+  green: { primary: '#22c55e', background: '#f7fee7' },
+  purple: { primary: '#a855f7', background: '#faf5ff' },
+  orange: { primary: '#f97316', background: '#fff7ed' },
+};
 
 export const useWidgetStore = create<WidgetStore>()(
   persist(
@@ -73,6 +87,11 @@ export const useWidgetStore = create<WidgetStore>()(
           w.id === id ? { ...w, config: { ...w.config, ...config } } : w
         )
       })),
+      updateWidgetTheme: (id, theme) => set((state) => ({
+        widgets: state.widgets.map((w) =>
+          w.id === id ? { ...w, theme } : w
+        )
+      })),
       recordInteraction: (id) => set((state) => ({
         widgets: state.widgets.map((w) =>
           w.id === id ? { 
@@ -104,14 +123,13 @@ export const useWidgetStore = create<WidgetStore>()(
         }
 
         // Remove duplicates and limit to 3 recommendations
-        return [...new Set(recommendations)].slice(0, 3);
+        return Array.from(new Set(recommendations)).slice(0, 3);
       }
     }),
     {
-      name: 'dashboard-widgets-v2', // Updated storage key for new schema
-      version: 1, // Add versioning
+      name: 'dashboard-widgets-v2',
+      version: 2,
       merge: (persistedState: any, currentState) => {
-        // Handle merging old state format with new one
         return {
           ...currentState,
           ...persistedState,
