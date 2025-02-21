@@ -7,7 +7,7 @@ import type { Node } from "@shared/schema";
 
 export default function Nodes() {
   const { toast } = useToast();
-  
+
   const nodesQuery = useQuery<Node[]>({
     queryKey: ["/api/nodes"]
   });
@@ -44,7 +44,7 @@ export default function Nodes() {
         <div>Error loading nodes</div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {nodesQuery.data.map((node) => (
+          {(nodesQuery.data || []).map((node) => (
             <NodeCard
               key={node.id}
               node={node}

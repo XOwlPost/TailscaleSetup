@@ -6,7 +6,7 @@ export interface IStorage {
   getNodes(): Promise<Node[]>;
   createNode(node: InsertNode): Promise<Node>;
   updateNodeStatus(id: number, status: string): Promise<Node | undefined>;
-  
+
   // ACL operations
   getAcl(id: number): Promise<Acl | undefined>;
   getAcls(): Promise<Acl[]>;
@@ -41,7 +41,8 @@ export class MemStorage implements IStorage {
       ...insertNode, 
       id, 
       status: "pending",
-      lastSeen: new Date()
+      lastSeen: new Date(),
+      tags: insertNode.tags || [], // Ensure tags is never undefined
     };
     this.nodes.set(id, node);
     return node;
@@ -50,7 +51,7 @@ export class MemStorage implements IStorage {
   async updateNodeStatus(id: number, status: string): Promise<Node | undefined> {
     const node = await this.getNode(id);
     if (!node) return undefined;
-    
+
     const updatedNode = { 
       ...node, 
       status,
@@ -70,7 +71,11 @@ export class MemStorage implements IStorage {
 
   async createAcl(insertAcl: InsertAcl): Promise<Acl> {
     const id = this.aclCurrentId++;
-    const acl: Acl = { ...insertAcl, id };
+    const acl: Acl = { 
+      ...insertAcl, 
+      id,
+      enabled: insertAcl.enabled ?? true, // Set default value for enabled
+    };
     this.acls.set(id, acl);
     return acl;
   }

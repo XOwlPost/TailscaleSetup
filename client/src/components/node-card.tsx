@@ -1,13 +1,28 @@
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Power, RefreshCw } from "lucide-react";
 import type { Node } from "@shared/schema";
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
 interface NodeCardProps {
   node: Node;
   onRestart?: () => void;
 }
+
+const statusVariants = cva("", {
+  variants: {
+    status: {
+      online: "bg-green-500/20 text-green-700",
+      offline: "bg-red-500/20 text-red-700",
+      pending: "bg-yellow-500/20 text-yellow-700"
+    }
+  },
+  defaultVariants: {
+    status: "pending"
+  }
+});
 
 export function NodeCard({ node, onRestart }: NodeCardProps) {
   return (
@@ -21,14 +36,16 @@ export function NodeCard({ node, onRestart }: NodeCardProps) {
             {node.ipAddress}
           </p>
         </div>
-        <StatusBadge status={node.status} />
+        <Badge className={statusVariants({ status: node.status as "online" | "offline" | "pending" })}>
+          {node.status}
+        </Badge>
       </CardHeader>
       <CardContent>
         <div className="grid gap-2">
           <div className="flex items-center">
             <span className="text-sm font-medium">Last seen:</span>
             <span className="ml-2 text-sm text-muted-foreground">
-              {new Date(node.lastSeen!).toLocaleString()}
+              {node.lastSeen ? new Date(node.lastSeen).toLocaleString() : 'Never'}
             </span>
           </div>
           <div className="flex items-center">
