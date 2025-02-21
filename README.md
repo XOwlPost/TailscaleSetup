@@ -9,6 +9,15 @@ A comprehensive Tailscale infrastructure management system with real-time node m
 - 🔐 **Role-based Access Control**: Granular permission management for infrastructure access
 - 📊 **Dynamic Dashboard**: Customizable widget system with drag-and-drop interface
 - 📱 **Responsive Design**: Fully responsive layout that works on desktop, tablet, and mobile devices
+- 🤖 **Self-Healing Agent**: Automated system recovery and optimization
+
+## Agent0 Self-Healing Features
+
+The system includes an intelligent self-healing agent that automatically:
+- 🔄 Restarts problematic services when issues are detected
+- 🧹 Clears memory cache when usage is high
+- 🌐 Optimizes network settings when packet loss occurs
+- 📊 Monitors system health and takes proactive actions
 
 ## Tech Stack
 
@@ -54,6 +63,16 @@ npm run dev
 - Run `npm run db:push` to sync database schema changes
 - Run `npm run dev` to start the development server
 - Run `npm run build` to create a production build
+
+## Server Logs
+
+The system provides detailed logging of all healing actions:
+- Service restart events
+- Memory optimization actions
+- Network configuration changes
+- Health check results
+
+You can view these logs in real-time when running the development server.
 
 ## License
 
