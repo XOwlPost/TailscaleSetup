@@ -63,14 +63,21 @@ export const useWidgetStore = create<WidgetStore>()(
           }
         };
 
-        await apiRequest('/api/widgets', {
-          method: 'POST',
-          body: JSON.stringify(newWidget)
-        });
+        try {
+          await apiRequest('/api/widgets', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newWidget)
+          });
 
-        set((state) => ({
-          widgets: [...state.widgets, newWidget]
-        }));
+          set((state) => ({
+            widgets: [...state.widgets, newWidget]
+          }));
+        } catch (error) {
+          console.error('Failed to add widget:', error);
+        }
       },
       removeWidget: async (id) => {
         await apiRequest(`/api/widgets/${id}`, {
@@ -129,20 +136,30 @@ export const useWidgetStore = create<WidgetStore>()(
         }));
       },
       updateWidgetTheme: async (id, theme) => {
-        await apiRequest(`/api/widgets/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ theme })
-        });
-
-        set((state) => ({
-          widgets: state.widgets.map((w) =>
-            w.id === id ? { 
-              ...w, 
-              theme: { ...theme },
+        try {
+          await apiRequest(`/api/widgets/${id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              theme,
               lastInteraction: new Date().toISOString()
-            } : w
-          )
-        }));
+            })
+          });
+
+          set((state) => ({
+            widgets: state.widgets.map((w) =>
+              w.id === id ? { 
+                ...w, 
+                theme: { ...theme },
+                lastInteraction: new Date().toISOString()
+              } : w
+            )
+          }));
+        } catch (error) {
+          console.error('Failed to update widget theme:', error);
+        }
       },
       recordInteraction: async (id) => {
         await apiRequest(`/api/widgets/${id}/interaction`, {
@@ -194,6 +211,11 @@ export const useWidgetStore = create<WidgetStore>()(
             ...widget,
             layout: widget.layout || {
               lastUpdated: new Date().toISOString()
+            },
+            theme: widget.theme || {
+              primary: '#3b82f6',
+              background: '#f0f9ff',
+              text: '#1e3a8a'
             }
           }))
         };

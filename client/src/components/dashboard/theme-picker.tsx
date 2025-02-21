@@ -14,10 +14,10 @@ interface ThemePickerProps {
 }
 
 const THEME_OPTIONS = {
-  blue: { primary: '#3b82f6', background: '#f8fafc', text: '#1e293b' },
-  green: { primary: '#22c55e', background: '#f7fee7', text: '#14532d' },
-  purple: { primary: '#a855f7', background: '#faf5ff', text: '#581c87' },
-  orange: { primary: '#f97316', background: '#fff7ed', text: '#7c2d12' },
+  blue: { primary: '#3b82f6', background: '#f0f9ff', text: '#1e3a8a' },
+  green: { primary: '#22c55e', background: '#f0fdf4', text: '#166534' },
+  purple: { primary: '#a855f7', background: '#faf5ff', text: '#6b21a8' },
+  orange: { primary: '#f97316', background: '#fff7ed', text: '#9a3412' },
   dark: { primary: '#64748b', background: '#1e293b', text: '#f8fafc' },
 };
 
