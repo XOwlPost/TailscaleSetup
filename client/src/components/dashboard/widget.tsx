@@ -26,18 +26,18 @@ export function DashboardWidget({
   return (
     <Card 
       className={cn(
-        "relative transition-shadow w-full min-h-[200px] break-inside-avoid",
-        "sm:min-h-[250px]",
-        isDragging && "shadow-lg",
+        "relative h-full transition-shadow break-inside-avoid",
+        isDragging && "shadow-lg ring-2 ring-primary/20",
         className
       )}
       data-widget-id={id}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-4 pt-4">
         <div className="flex items-center gap-2">
-          <Grip className="h-4 w-4 cursor-move text-muted-foreground hidden sm:block" 
-                onMouseDown={() => setIsDragging(true)}
-                onMouseUp={() => setIsDragging(false)}
+          <Grip 
+            className="h-4 w-4 cursor-move text-muted-foreground hidden sm:block" 
+            onMouseDown={() => setIsDragging(true)}
+            onMouseUp={() => setIsDragging(false)}
           />
           <CardTitle className="text-sm font-medium truncate">{title}</CardTitle>
         </div>
@@ -50,7 +50,7 @@ export function DashboardWidget({
           </button>
         )}
       </CardHeader>
-      <CardContent className="overflow-x-auto">
+      <CardContent className="px-4 pb-4">
         {children}
       </CardContent>
     </Card>

@@ -32,7 +32,7 @@ export function GridLayout({
       axis="y" 
       values={children}
       onReorder={onReorder}
-      className={`grid gap-4 ${className}`}
+      className={`grid gap-6 ${className}`}
       style={{
         gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
       }}
@@ -62,6 +62,7 @@ export function GridItem({
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2 }}
+        className="h-full"
       >
         {children}
       </motion.div>
